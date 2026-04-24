@@ -1,57 +1,747 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Kimiyyar Zahiri Tech Hub</title>
-        <link rel="stylesheet" href="style.css">
-          <link rel="manifest" href="manifest.json">
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/vis-network.min.js"></script>
-              <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/dist/vis-network.min.css">
-              </head>
-              <body>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KZ Digital Intelligence Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --gold: #e8a020;
+    --gold-dim: #b87318;
+    --gold-glow: #e8a02030;
+    --obsidian: #0a0a0a;
+    --surface: #111111;
+    --surface2: #181818;
+    --border: #242424;
+    --text: #f0ede8;
+    --text-dim: #6a6560;
+    --text-mid: #a09890;
+  }
 
-                <header class="kz-header">
-                    <div class="kz-logo">KZ</div>
-                        <div class="kz-brand">
-                              <h1>Kimiyyar Zahiri</h1>
-                                    <p>Fahimta. Aminci. Ci Gaba.</p>
-                                        </div>
-                                            <button class="kz-lang" id="langToggle">🌙 Hausa</button>
-                                              </header>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-                                                <div class="kz-layout">
+  html { scroll-behavior: smooth; }
 
-                                                    <div id="kz-graph"></div>
+  body {
+    background: var(--obsidian);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    overflow-x: hidden;
+    cursor: none;
+  }
 
-                                                        <div id="kz-panel" class="kz-panel hidden">
-                                                              <button class="panel-close" id="panelClose">✕ Close</button>
+  /* Custom cursor */
+  #cursor {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--gold);
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.08s ease, width 0.2s, height 0.2s, background 0.2s;
+    mix-blend-mode: difference;
+  }
+  #cursor.expand { width: 36px; height: 36px; background: var(--gold-dim); }
 
-                                                                    <div class="panel-cat" id="panelCat"></div>
-                                                                          <h2 id="panelTitle"></h2>
-                                                                                <p id="panelSummary"></p>
-                                                                                      <div class="panel-meta" id="panelMeta"></div>
+  /* Islamic geometric background */
+  .geo-bg {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+  }
+  .geo-bg svg { width: 100%; height: 100%; opacity: 0.035; }
 
-                                                                                            <div class="action-grid">
-                                                                                                    <button onclick="runAction('research')">🔍 Research</button>
-                                                                                                            <button onclick="runAction('learn')">📖 Learn</button>
-                                                                                                                    <button onclick="runAction('automate')">⚙️ Automate</button>
-                                                                                                                            <button onclick="runAction('content')">🐦 Content</button>
-                                                                                                                                    <button onclick="runAction('track')">📊 Track</button>
-                                                                                                                                          </div>
+  /* Scroll reveal */
+  .reveal {
+    opacity: 0; transform: translateY(28px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
 
-                                                                                                                                                <div id="aiSection" class="ai-section hidden">
-                                                                                                                                                        <div class="ai-header">
-                                                                                                                                                                  <span id="aiLabel"></span>
-                                                                                                                                                                            <a id="waShare" href="#" target="_blank" class="wa-btn">📤 WhatsApp</a>
-                                                                                                                                                                                    </div>
-                                                                                                                                                                                            <div id="aiLoading" class="ai-loading hidden">⏳ Generating...</div>
-                                                                                                                                                                                                    <div id="aiOutput" class="ai-output"></div>
-                                                                                                                                                                                                          </div>
+  /* ─── NAV ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 48px;
+    background: linear-gradient(to bottom, var(--obsidian) 60%, transparent);
+    transition: background 0.3s;
+  }
+  nav.scrolled { background: rgba(10,10,10,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
 
-                                                                                                                                                                                                              </div>
-                                                                                                                                                                                                                </div>
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 18px;
+    color: var(--text); letter-spacing: -0.5px;
+  }
+  .nav-logo span { color: var(--gold); }
 
-                                                                                                                                                                                                                  <script src="app.js"></script>
-                                                                                                                                                                                                                  </body>
-                                                                                                                                                                                                                  </html>
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-dim); text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+
+  .nav-cta {
+    padding: 9px 20px;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-size: 11px; letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    font-family: 'DM Mono', monospace;
+    transition: background 0.2s, color 0.2s;
+  }
+  .nav-cta:hover { background: var(--gold); color: var(--obsidian); }
+
+  /* ─── HERO ─── */
+  #hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: flex-start;
+    padding: 0 48px;
+    position: relative; overflow: hidden;
+  }
+
+  .hero-eyebrow {
+    font-size: 10px; letter-spacing: 4px;
+    color: var(--gold); text-transform: uppercase;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: block; width: 32px; height: 1px;
+    background: var(--gold);
+  }
+
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(40px, 7vw, 96px);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -2px;
+    color: var(--text);
+    max-width: 900px;
+    margin-bottom: 24px;
+  }
+  .hero-title .accent { color: var(--gold); }
+  .hero-title .outline {
+    -webkit-text-stroke: 1.5px var(--gold);
+    color: transparent;
+  }
+
+  .hero-sub {
+    font-size: 14px; color: var(--text-mid);
+    max-width: 500px; line-height: 1.8;
+    margin-bottom: 40px;
+  }
+  .hero-sub span { color: var(--gold); }
+
+  .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+
+  .btn-primary {
+    padding: 14px 32px;
+    background: var(--gold);
+    color: var(--obsidian);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 13px;
+    letter-spacing: 1px;
+    text-decoration: none;
+    text-transform: uppercase;
+    border: none; cursor: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px var(--gold-glow); }
+
+  .btn-ghost {
+    padding: 14px 32px;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 2px;
+    text-decoration: none;
+    text-transform: uppercase;
+    cursor: none;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-ghost:hover { border-color: var(--gold-dim); color: var(--gold); }
+
+  /* Stats row */
+  .hero-stats {
+    position: absolute; bottom: 48px; left: 48px;
+    display: flex; gap: 48px;
+  }
+  .stat-item { }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px; font-weight: 800;
+    color: var(--gold); line-height: 1;
+  }
+  .stat-label { font-size: 10px; color: var(--text-dim); letter-spacing: 2px; margin-top: 4px; }
+
+  /* Gold line decoration */
+  .hero-line {
+    position: absolute; right: 48px; top: 50%;
+    transform: translateY(-50%);
+    width: 1px; height: 200px;
+    background: linear-gradient(to bottom, transparent, var(--gold), transparent);
+    opacity: 0.4;
+  }
+
+  /* Floating badge */
+  .hero-badge {
+    position: absolute; right: 80px; top: 38%;
+    transform: translateY(-50%);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 16px 20px;
+    font-size: 10px; color: var(--text-dim); letter-spacing: 1px;
+    line-height: 1.8;
+    animation: float 4s ease-in-out infinite;
+  }
+  .hero-badge strong { display: block; color: var(--gold); font-family: 'Syne', sans-serif; font-size: 13px; margin-bottom: 4px; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(-50%); }
+    50% { transform: translateY(calc(-50% - 8px)); }
+  }
+
+  /* Glow orb */
+  .glow-orb {
+    position: absolute; border-radius: 50%; pointer-events: none;
+    filter: blur(80px);
+  }
+
+  /* ─── SECTION COMMON ─── */
+  section { padding: 120px 48px; position: relative; }
+  .section-label {
+    font-size: 10px; letter-spacing: 4px; color: var(--gold);
+    text-transform: uppercase; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after { content: ''; flex: 1; max-width: 40px; height: 1px; background: var(--gold); }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(28px, 4vw, 52px);
+    font-weight: 800; letter-spacing: -1px;
+    color: var(--text); margin-bottom: 20px;
+    line-height: 1.1;
+  }
+  .section-title .accent { color: var(--gold); }
+
+  .section-body {
+    font-size: 14px; color: var(--text-mid);
+    line-height: 1.9; max-width: 560px;
+  }
+
+  /* ─── ABOUT ─── */
+  #about { background: var(--surface); }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px; margin-top: 64px;
+    align-items: start;
+  }
+
+  .about-pillars { display: flex; flex-direction: column; gap: 12px; }
+
+  .pillar {
+    display: flex; align-items: flex-start; gap: 16px;
+    padding: 20px; border: 1px solid var(--border);
+    background: var(--surface2);
+    transition: border-color 0.2s;
+  }
+  .pillar:hover { border-color: var(--gold-dim); }
+  .pillar-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .pillar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: var(--text); margin-bottom: 4px; }
+  .pillar-desc { font-size: 11px; color: var(--text-dim); line-height: 1.7; }
+
+  .about-visual {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .about-octagon {
+    width: 280px; height: 280px;
+    position: relative;
+  }
+
+  .values-list { margin-top: 32px; }
+  .value-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+    font-size: 12px; color: var(--text-mid);
+  }
+  .value-item::before { content: '◆'; color: var(--gold); font-size: 8px; }
+
+  /* ─── SERVICES ─── */
+  #services { }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    margin-top: 64px;
+    border: 1px solid var(--border);
+  }
+
+  .service-card {
+    background: var(--obsidian);
+    padding: 36px 28px;
+    position: relative; overflow: hidden;
+    transition: background 0.3s;
+    cursor: none;
+  }
+  .service-card:hover { background: var(--surface); }
+  .service-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px; background: var(--gold);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.3s;
+  }
+  .service-card:hover::before { transform: scaleX(1); }
+
+  .service-num {
+    font-size: 10px; color: var(--text-dim);
+    letter-spacing: 2px; margin-bottom: 20px;
+    font-family: 'DM Mono', monospace;
+  }
+  .service-icon { font-size: 28px; margin-bottom: 16px; display: block; }
+  .service-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px; font-weight: 700;
+    color: var(--text); margin-bottom: 10px;
+    line-height: 1.2;
+  }
+  .service-desc { font-size: 12px; color: var(--text-dim); line-height: 1.8; }
+  .service-tag {
+    display: inline-block;
+    margin-top: 16px; padding: 4px 10px;
+    border: 1px solid var(--border);
+    font-size: 9px; letter-spacing: 1.5px;
+    color: var(--gold); text-transform: uppercase;
+  }
+
+  /* ─── CONTACT ─── */
+  #contact { background: var(--surface); }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px; margin-top: 64px;
+  }
+
+  .contact-form { display: flex; flex-direction: column; gap: 16px; }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-size: 10px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; }
+
+  .form-input, .form-textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 14px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .form-input:focus, .form-textarea:focus { border-color: var(--gold-dim); }
+  .form-textarea { resize: vertical; min-height: 120px; }
+
+  .form-submit {
+    padding: 16px;
+    background: var(--gold);
+    color: var(--obsidian);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 13px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    border: none; cursor: none;
+    transition: opacity 0.2s, transform 0.2s;
+    margin-top: 4px;
+  }
+  .form-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  .contact-info { display: flex; flex-direction: column; gap: 28px; }
+
+  .info-block { }
+  .info-label { font-size: 10px; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; }
+  .info-value { font-size: 13px; color: var(--text-mid); line-height: 1.7; }
+
+  .social-links { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+  .social-link {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 12px; color: var(--text-mid);
+    text-decoration: none;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    transition: color 0.2s;
+  }
+  .social-link:hover { color: var(--gold); }
+  .social-link span { font-size: 10px; letter-spacing: 1px; color: var(--text-dim); margin-left: auto; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    padding: 40px 48px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; }
+  .footer-logo span { color: var(--gold); }
+  .footer-copy { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+  .footer-arabic { font-size: 18px; color: var(--gold); opacity: 0.5; }
+
+  /* ─── DIVIDER ─── */
+  .gold-divider {
+    width: 100%; height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+    opacity: 0.3;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: var(--obsidian); }
+  ::-webkit-scrollbar-thumb { background: var(--gold-dim); }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    section { padding: 80px 20px; }
+    #hero { padding: 0 20px; }
+    .hero-title { font-size: 36px; letter-spacing: -1px; }
+    .hero-badge, .hero-line { display: none; }
+    .hero-stats { left: 20px; gap: 28px; }
+    .about-grid, .contact-grid { grid-template-columns: 1fr; gap: 40px; }
+    .services-grid { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 16px; text-align: center; }
+  }
+
+  /* Animations */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+  .hero-eyebrow { animation: fadeUp 0.6s ease 0.2s both; }
+  .hero-title { animation: fadeUp 0.7s ease 0.35s both; }
+  .hero-sub { animation: fadeUp 0.6s ease 0.5s both; }
+  .hero-btns { animation: fadeUp 0.6s ease 0.65s both; }
+  .hero-badge { animation: fadeIn 0.8s ease 0.8s both, float 4s ease-in-out 1.5s infinite; }
+  .hero-stats { animation: fadeUp 0.6s ease 1s both; }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+
+<!-- Islamic Geometric Background -->
+<div class="geo-bg">
+  <svg xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="geo" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+        <polygon points="27,4 53,4 76,27 76,53 53,76 27,76 4,53 4,27" fill="none" stroke="#e8a020" stroke-width="0.8"/>
+        <line x1="27" y1="4" x2="53" y2="76" stroke="#e8a020" stroke-width="0.3"/>
+        <line x1="53" y1="4" x2="27" y2="76" stroke="#e8a020" stroke-width="0.3"/>
+        <line x1="4" y1="27" x2="76" y2="53" stroke="#e8a020" stroke-width="0.3"/>
+        <line x1="4" y1="53" x2="76" y2="27" stroke="#e8a020" stroke-width="0.3"/>
+        <circle cx="40" cy="40" r="3" fill="none" stroke="#e8a020" stroke-width="0.5"/>
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#geo)"/>
+  </svg>
+</div>
+
+<!-- ─── NAV ─── -->
+<nav id="navbar">
+  <div class="nav-logo">KZ<span>·</span>DI</div>
+  <ul class="nav-links">
+    <li><a href="#hero">Home</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Join Hub</a>
+</nav>
+
+<!-- ─── HERO ─── -->
+<section id="hero">
+
+  <!-- Glow orbs -->
+  <div class="glow-orb" style="width:500px;height:400px;top:-100px;left:-100px;background:radial-gradient(circle,#e8a02015,transparent 70%);"></div>
+  <div class="glow-orb" style="width:300px;height:300px;bottom:100px;right:200px;background:radial-gradient(circle,#e8a02010,transparent 70%);"></div>
+
+  <p class="hero-eyebrow">KZ Digital Intelligence Hub · Arewa</p>
+
+  <h1 class="hero-title">
+    Bridging the<br>
+    <span class="accent">Digital Divide</span><br>
+    <span class="outline">One Mind</span> at a Time
+  </h1>
+
+  <p class="hero-sub">
+    AI literacy, Web3 education & digital entrepreneurship — delivered in <span>Hausa & English</span> for the next generation of Arewa innovators.
+  </p>
+
+  <div class="hero-btns">
+    <a href="#services" class="btn-primary">Explore Programs</a>
+    <a href="#about" class="btn-ghost">Our Mission →</a>
+  </div>
+
+  <div class="hero-line"></div>
+
+  <div class="hero-badge">
+    <strong>Phase 1 · Live</strong>
+    Foundation Launch<br>
+    April 2026<br>
+    <span style="color:#e8a020">Arewa, Northern Nigeria</span>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <div class="stat-num">76+</div>
+      <div class="stat-label">Day 1 Impressions</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">6</div>
+      <div class="stat-label">Phase Roadmap</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">2</div>
+      <div class="stat-label">Languages</div>
+    </div>
+  </div>
+</section>
+
+<div class="gold-divider"></div>
+
+<!-- ─── ABOUT ─── -->
+<section id="about">
+  <p class="section-label reveal">About KZDI</p>
+  <h2 class="section-title reveal">Built for <span class="accent">Arewa.</span><br>Designed for the Future.</h2>
+  <p class="section-body reveal">
+    KZDI is a systems-driven education and technology hub empowering Hausa-speaking communities with the tools, knowledge, and infrastructure to participate fully in the digital economy — on their own terms.
+  </p>
+
+  <div class="about-grid">
+    <div class="about-pillars reveal">
+      <div class="pillar">
+        <div class="pillar-icon">🧠</div>
+        <div>
+          <div class="pillar-title">AI Literacy First</div>
+          <div class="pillar-desc">Demystifying artificial intelligence for everyday Arewa youth — in Hausa, with real-world context they can use.</div>
+        </div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">🌐</div>
+        <div>
+          <div class="pillar-title">Web3 & Digital Finance</div>
+          <div class="pillar-desc">Shariah-conscious introduction to blockchain, decentralized systems and digital ownership — no Riba, no Gharar.</div>
+        </div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">🏗️</div>
+        <div>
+          <div class="pillar-title">Infrastructure Ownership</div>
+          <div class="pillar-desc">We don't just teach tools — we build them. Bots, platforms, and systems that belong to the community.</div>
+        </div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">📡</div>
+        <div>
+          <div class="pillar-title">Media-Powered Reach</div>
+          <div class="pillar-desc">Animation series, YouTube, WhatsApp — meeting the community where they already are.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <p class="section-label" style="margin-bottom:8px;">Founder</p>
+      <div style="padding:28px;border:1px solid var(--border);background:var(--surface2);margin-bottom:24px;">
+        <p style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--text);margin-bottom:4px;">Kimiyyar Zahiri</p>
+        <p style="font-size:11px;color:var(--gold);letter-spacing:1px;margin-bottom:16px;">@Kriptomech · Founder, KZDI</p>
+        <p style="font-size:12px;color:var(--text-dim);line-height:1.9;">
+          Systems thinker. Software engineer. Panel beater turned digital architect. Building the bridge Arewa youth deserve — with leverage over hustle, and infrastructure over dependency.
+        </p>
+      </div>
+
+      <p class="info-label" style="margin-bottom:12px;">Core Values</p>
+      <div class="values-list">
+        <div class="value-item">Long-term thinking over short-term wins</div>
+        <div class="value-item">Leverage over hustle</div>
+        <div class="value-item">Infrastructure ownership</div>
+        <div class="value-item">Islamic Finance awareness</div>
+        <div class="value-item">Cultural integrity in every product</div>
+        <div class="value-item">Bilingual by default — Hausa / English</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="gold-divider"></div>
+
+<!-- ─── SERVICES ─── -->
+<section id="services">
+  <p class="section-label reveal">What We Offer</p>
+  <h2 class="section-title reveal">Programs & <span class="accent">Platforms</span></h2>
+  <p class="section-body reveal">Six active and upcoming initiatives — each one a brick in the digital infrastructure of Arewa.</p>
+
+  <div class="services-grid reveal">
+    <div class="service-card">
+      <div class="service-num">01</div>
+      <span class="service-icon">🤖</span>
+      <div class="service-title">WhatsApp AI Mentor Bot</div>
+      <div class="service-desc">24/7 AI-powered learning assistant in Hausa & English. Ask questions, learn concepts, get guidance — right inside WhatsApp.</div>
+      <div class="service-tag">In Development</div>
+    </div>
+
+    <div class="service-card">
+      <div class="service-num">02</div>
+      <span class="service-icon">🎬</span>
+      <div class="service-title">KZ Animation Series</div>
+      <div class="service-desc">Bite-sized educational animations on AI, Web3, and digital skills — produced for YouTube with Canva, CapCut & ElevenLabs.</div>
+      <div class="service-tag">In Production</div>
+    </div>
+
+    <div class="service-card">
+      <div class="service-num">03</div>
+      <span class="service-icon">📊</span>
+      <div class="service-title">Data Intelligence Training</div>
+      <div class="service-desc">Power BI, data analysis and storytelling for Arewa businesses and aspiring analysts — practical, career-ready skills.</div>
+      <div class="service-tag">Building</div>
+    </div>
+
+    <div class="service-card">
+      <div class="service-num">04</div>
+      <span class="service-icon">🕌</span>
+      <div class="service-title">Islamic Finance & Web3</div>
+      <div class="service-desc">Shariah-compliant exploration of digital finance — DeFi, tokenomics, and digital ownership through an Islamic lens.</div>
+      <div class="service-tag">Phase 5</div>
+    </div>
+
+    <div class="service-card">
+      <div class="service-num">05</div>
+      <span class="service-icon">🧩</span>
+      <div class="service-title">Digital Entrepreneurship</div>
+      <div class="service-desc">Turning ideas into systems — business model design, content monetization, and leverage-based growth for Arewa founders.</div>
+      <div class="service-tag">Phase 5</div>
+    </div>
+
+    <div class="service-card">
+      <div class="service-num">06</div>
+      <span class="service-icon">🌍</span>
+      <div class="service-title">Community Hub & Network</div>
+      <div class="service-desc">A growing ecosystem of Arewa youth, developers, and digital entrepreneurs — connected, resourced, and building together.</div>
+      <div class="service-tag">Always Open</div>
+    </div>
+  </div>
+</section>
+
+<div class="gold-divider"></div>
+
+<!-- ─── CONTACT ─── -->
+<section id="contact">
+  <p class="section-label reveal">Get Involved</p>
+  <h2 class="section-title reveal">Join the <span class="accent">Hub</span></h2>
+  <p class="section-body reveal">Whether you're a student, developer, educator, or partner — there's a place for you in KZDI.</p>
+
+  <div class="contact-grid">
+    <div class="contact-form reveal">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" type="text" placeholder="Abubakar Ibrahim..."/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email / WhatsApp</label>
+        <input class="form-input" type="text" placeholder="+234 or email address"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">I want to...</label>
+        <select class="form-input" style="appearance:none;">
+          <option>Learn AI & Digital Skills</option>
+          <option>Join as a Developer</option>
+          <option>Partner with KZDI</option>
+          <option>Support the Mission</option>
+          <option>Collaborate on Content</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Message (optional)</label>
+        <textarea class="form-textarea" placeholder="Tell us about yourself..."></textarea>
+      </div>
+      <button class="form-submit">Send Message →</button>
+    </div>
+
+    <div class="contact-info reveal">
+      <div class="info-block">
+        <p class="info-label">Location</p>
+        <p class="info-value">Arewa, Northern Nigeria<br>Serving Hausa-speaking communities<br>across Northern Nigeria & diaspora</p>
+      </div>
+
+      <div class="info-block">
+        <p class="info-label">Founded by</p>
+        <p class="info-value">Kimiyyar Zahiri (Kriptomech)<br>April 2026 · Phase 1 Active</p>
+      </div>
+
+      <div class="info-block">
+        <p class="info-label">Connect</p>
+        <div class="social-links">
+          <a href="#" class="social-link">🔗 LinkedIn — Kimiyyar Zahiri <span>→</span></a>
+          <a href="#" class="social-link">📘 Facebook — KZDI Hub <span>→</span></a>
+          <a href="#" class="social-link">📺 YouTube — KZ Animation <span>→</span></a>
+          <a href="#" class="social-link">💬 WhatsApp Bot — Join Waitlist <span>→</span></a>
+        </div>
+      </div>
+
+      <div style="padding:20px;border:1px solid #e8a02040;background:#e8a02008;margin-top:8px;">
+        <p style="font-size:10px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Islamic View</p>
+        <p style="font-size:12px;color:var(--text-dim);line-height:1.8;">All KZDI programs are designed with Islamic principles in mind — halal income, ethical finance, and community benefit (Maslaha) at the core.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div class="footer-logo">KZ<span>·</span>Digital Intelligence Hub</div>
+  <div class="footer-copy">© 2026 KZDI · Arewa · All rights reserved</div>
+  <div class="footer-arabic">بسم الله</div>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  document.addEventListener('mousemove', e => {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+  });
+  document.querySelectorAll('a, button, .service-card, .pillar').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('expand'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('expand'));
+  });
+
+  // Nav scroll
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        // Stagger children if needed
+      }
+    });
+  }, { threshold: 0.12 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
